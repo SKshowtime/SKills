@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Skill Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--bg2:#111113;--bg3:#18181b;--bg4:#222225;
+  --fg:#e4e4e7;--fg2:#a1a1aa;--fg3:#71717a;
+  --accent:#22d3ee;--accent2:#06b6d4;--accent-dim:rgba(34,211,238,.08);
+  --green:#4ade80;--green-dim:rgba(74,222,128,.1);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,.1);
+  --red:#f87171;--red-dim:rgba(248,113,113,.1);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,.1);
+  --border:#27272a;--border2:#3f3f46;
+  --radius:10px;--radius-sm:6px;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'DM Sans',sans-serif;
+  --font-display:'Instrument Serif',serif;
+  --shadow:0 8px 32px rgba(0,0,0,.4);
+  --glow:0 0 40px rgba(34,211,238,.06);
+}
+/* Language switcher */
+.lang-switch{
+  display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-sm);
+  overflow:hidden;font-size:.8rem;font-family:var(--font-mono);
+}
+.lang-switch button{
+  padding:6px 14px;background:var(--bg3);color:var(--fg3);border:none;
+  cursor:pointer;transition:all .15s;font-family:inherit;font-size:inherit;
+}
+.lang-switch button:not(:last-child){border-right:1px solid var(--border)}
+.lang-switch button.active{background:var(--accent);color:var(--bg);font-weight:600}
+.lang-switch button:hover:not(.active){background:var(--bg4);color:var(--fg2)}
+html{font-size:15px;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--fg);font-family:var(--font-body);
+  line-height:1.6;min-height:100vh;overflow-x:hidden;
+}
+::selection{background:var(--accent);color:var(--bg)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--fg3)}
+
+/* ---- LAYOUT ---- */
+.app{max-width:1280px;margin:0 auto;padding:0 24px}
+header{
+  padding:48px 0 40px;display:flex;align-items:flex-end;
+  justify-content:space-between;flex-wrap:wrap;gap:16px;
+  border-bottom:1px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{
+  width:44px;height:44px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--accent),#818cf8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--bg);font-family:var(--font-mono);
+  box-shadow:0 0 24px rgba(34,211,238,.2);
+}
+.logo h1{
+  font-family:var(--font-display);font-size:2rem;font-weight:400;
+  letter-spacing:-.02em;color:var(--fg);
+}
+.logo h1 em{font-style:italic;color:var(--accent)}
+.header-right{display:flex;gap:10px;align-items:center}
+
+/* ---- BUTTONS ---- */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:var(--radius-sm);
+  font-family:var(--font-body);font-size:.875rem;font-weight:500;
+  cursor:pointer;border:1px solid var(--border);
+  background:var(--bg3);color:var(--fg);
+  transition:all .2s ease;white-space:nowrap;
+}
+.btn:hover{background:var(--bg4);border-color:var(--border2);transform:translateY(-1px)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent2),#818cf8);
+  border-color:transparent;color:var(--bg);font-weight:600;
+}
+.btn-primary:hover{opacity:.9;box-shadow:0 0 20px rgba(34,211,238,.25)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--fg2)}
+.btn-ghost:hover{color:var(--fg);background:var(--bg3)}
+.btn-sm{padding:6px 14px;font-size:.8rem}
+.btn-danger{border-color:var(--red);color:var(--red)}
+.btn-danger:hover{background:var(--red-dim)}
+.btn svg{width:16px;height:16px;fill:currentColor}
+
+/* ---- TABS ---- */
+.tabs-bar{
+  display:flex;gap:2px;padding:24px 0 0;
+  border-bottom:1px solid var(--border);
+}
+.tab{
+  padding:10px 20px;font-size:.875rem;color:var(--fg3);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;font-weight:500;font-family:var(--font-body);
+  background:none;border-top:none;border-left:none;border-right:none;
+}
+.tab:hover{color:var(--fg2)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ---- PANELS ---- */
+.panel{display:none;padding:32px 0 64px;animation:fadeUp .3s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---- EDITOR PANEL ---- */
+.editor-grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+@media(max-width:860px){.editor-grid{grid-template-columns:1fr}}
+
+.meta-form{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+  position:sticky;top:24px;
+}
+.meta-form h3{
+  font-family:var(--font-mono);font-size:.75rem;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--fg3);margin-bottom:20px;
+}
+.field{margin-bottom:18px}
+.field label{
+  display:block;font-size:.8rem;font-weight:500;
+  color:var(--fg2);margin-bottom:6px;
+  font-family:var(--font-mono);
+}
+.field label .required{color:var(--red);margin-left:2px}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 12px;background:var(--bg);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--fg);font-family:var(--font-body);font-size:.875rem;
+  transition:border-color .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-dim);
+}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5}
+.field select{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2371717a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:32px;
+}
+.field .help{font-size:.75rem;color:var(--fg3);margin-top:4px}
+.chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;background:var(--accent-dim);
+  color:var(--accent);border-radius:20px;font-size:.75rem;
+  font-family:var(--font-mono);
+}
+.chip .remove{
+  cursor:pointer;opacity:.6;transition:opacity .15s;
+  font-size:.85rem;line-height:1;
+}
+.chip .remove:hover{opacity:1}
+.tool-input-row{display:flex;gap:6px}
+.tool-input-row input{flex:1}
+
+/* Code editor area */
+.code-area{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.code-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  background:var(--bg3);
+}
+.code-header span{
+  font-family:var(--font-mono);font-size:.75rem;color:var(--fg3);
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.code-editor{
+  width:100%;min-height:520px;padding:20px;
+  background:var(--bg);border:none;color:var(--fg);
+  font-family:var(--font-mono);font-size:.825rem;line-height:1.7;
+  resize:vertical;outline:none;tab-size:2;
+}
+.code-editor::placeholder{color:var(--fg3)}
+
+/* ---- PREVIEW PANEL ---- */
+.preview-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  max-width:780px;
+}
+.preview-header{
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+}
+.preview-icon{
+  width:48px;height:48px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--accent),#818cf8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;color:var(--bg);
+  font-family:var(--font-mono);flex-shrink:0;
+}
+.preview-meta h2{font-size:1.25rem;font-weight:600;line-height:1.3}
+.preview-meta p{font-size:.85rem;color:var(--fg2);margin-top:2px}
+.preview-badges{
+  display:flex;gap:8px;padding:16px 24px;
+  border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.badge{
+  padding:4px 12px;border-radius:20px;font-size:.75rem;
+  font-family:var(--font-mono);font-weight:500;
+}
+.badge-cyan{background:var(--accent-dim);color:var(--accent)}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-amber{background:var(--amber-dim);color:var(--amber)}
+.badge-purple{background:var(--purple-dim);color:var(--purple)}
+.preview-body{padding:24px;font-size:.9rem;line-height:1.7}
+.preview-body h1,.preview-body h2,.preview-body h3{
+  font-family:var(--font-body);font-weight:600;margin:20px 0 10px;
+}
+.preview-body h1{font-size:1.3rem}
+.preview-body h2{font-size:1.1rem}
+.preview-body h3{font-size:1rem}
+.preview-body p{margin-bottom:12px;color:var(--fg2)}
+.preview-body ul,.preview-body ol{margin:8px 0 16px 20px;color:var(--fg2)}
+.preview-body li{margin-bottom:4px}
+.preview-body code{
+  background:var(--bg3);padding:2px 6px;border-radius:4px;
+  font-family:var(--font-mono);font-size:.82rem;color:var(--accent);
+}
+.preview-body pre{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:16px;
+  overflow-x:auto;margin:12px 0;
+}
+.preview-body pre code{background:none;padding:0;color:var(--fg)}
+.preview-body blockquote{
+  border-left:3px solid var(--accent);padding:8px 16px;
+  margin:12px 0;background:var(--accent-dim);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+}
+.preview-raw{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  font-family:var(--font-mono);font-size:.8rem;
+  line-height:1.7;white-space:pre-wrap;word-break:break-all;
+  color:var(--fg2);max-height:600px;overflow:auto;
+}
+
+/* ---- LIBRARY PANEL ---- */
+.library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.skill-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  cursor:pointer;transition:all .2s;position:relative;
+}
+.skill-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.skill-card h4{font-size:1rem;margin-bottom:6px;font-weight:600}
+.skill-card p{font-size:.82rem;color:var(--fg2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.skill-card .card-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
+}
+.skill-card .card-type{
+  font-family:var(--font-mono);font-size:.7rem;
+  color:var(--fg3);text-transform:uppercase;letter-spacing:.05em;
+}
+.skill-card .card-actions{display:flex;gap:6px}
+.empty-state{
+  text-align:center;padding:80px 20px;color:var(--fg3);
+}
+.empty-state .empty-icon{font-size:3rem;margin-bottom:16px;opacity:.3}
+.empty-state p{font-size:.95rem;margin-bottom:24px}
+
+/* ---- IMPORT OVERLAY ---- */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  backdrop-filter:blur(8px);display:none;z-index:100;
+  align-items:center;justify-content:center;
+  animation:fadeIn .2s;
+}
+.overlay.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:32px;
+  width:90%;max-width:560px;box-shadow:var(--shadow);
+  animation:scaleIn .25s ease;
+}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+.modal h3{font-size:1.1rem;margin-bottom:8px}
+.modal p{font-size:.85rem;color:var(--fg2);margin-bottom:20px}
+.modal .field{margin-bottom:16px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+
+.dropzone{
+  border:2px dashed var(--border2);border-radius:var(--radius);
+  padding:40px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;color:var(--fg3);
+}
+.dropzone:hover,.dropzone.drag-over{
+  border-color:var(--accent);background:var(--accent-dim);color:var(--accent);
+}
+.dropzone p{font-size:.85rem;margin-top:8px}
+.dropzone .drop-icon{font-size:2rem;margin-bottom:4px}
+
+/* ---- TOAST ---- */
+.toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{
+  padding:12px 20px;border-radius:var(--radius-sm);
+  font-size:.85rem;font-weight:500;
+  background:var(--bg3);border:1px solid var(--border);color:var(--fg);
+  box-shadow:var(--shadow);animation:slideIn .3s ease;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+/* ---- FOOTER ---- */
+footer{
+  padding:32px 0;border-top:1px solid var(--border);
+  text-align:center;color:var(--fg3);font-size:.8rem;
+  margin-top:40px;
+}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* ---- NOISE TEXTURE ---- */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  z-index:9999;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">S</div>
+      <h1>AI Skill <em>Forge</em></h1>
+    </div>
+    <div class="header-right">
+      <div class="lang-switch" id="lang-switch">
+        <button onclick="setLang('zh')" data-lang="zh">中文</button>
+        <button onclick="setLang('en')" data-lang="en" class="active">EN</button>
+      </div>
+      <button class="btn btn-sm" onclick="showImportModal()">
+        <svg viewBox="0 0 16 16"><path d="M8 1a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 1z"/></svg>
+        <span data-i18n="importBtn">Import SKILL.md</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs-bar">
+    <button class="tab active" data-tab="editor" data-i18n="tabEditor">Editor</button>
+    <button class="tab" data-tab="preview" data-i18n="tabPreview">Preview</button>
+    <button class="tab" data-tab="library"><span data-i18n="tabLibrary">Library</span> <span id="lib-count"></span></button>
+  </nav>
+
+  <!-- ====== EDITOR ====== -->
+  <div class="panel active" id="panel-editor">
+    <div class="editor-grid">
+      <aside class="meta-form">
+        <h3 data-i18n="metaTitle">Skill Metadata</h3>
+        <div class="field">
+          <label><span data-i18n="fieldName">name</span> <span class="required">*</span></label>
+          <input type="text" id="meta-name" data-i18n-placeholder="phName" placeholder="e.g. pdf-processor">
+        </div>
+        <div class="field">
+          <label data-i18n="fieldDesc">description</label>
+          <textarea id="meta-desc" rows="3" data-i18n-placeholder="phDesc" placeholder="Skill description..."></textarea>
+        </div>
+        <div class="field">
+          <label data-i18n="fieldTrigger">trigger type</label>
+          <select id="meta-trigger">
+            <option value="always" data-i18n="triggerAlways">always (auto-trigger)</option>
+            <option value="manual" data-i18n="triggerManual">manual (slash command)</option>
+            <option value="requested" selected data-i18n="triggerRequested">requested (AI decides)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="fieldTools">allowed-tools</label>
+          <div class="tool-input-row">
+            <input type="text" id="tool-input" data-i18n-placeholder="phTool" placeholder="e.g. Bash">
+            <button class="btn btn-sm" onclick="addTool()" data-i18n="addBtn">Add</button>
+          </div>
+          <div class="chip-list" id="tool-chips"></div>
+          <div class="help" data-i18n="toolHelp">Common: Read, Write, Bash, WebFetch, Grep, Glob</div>
+        </div>
+        <div class="field">
+          <label data-i18n="fieldContext">context</label>
+          <select id="meta-context">
+            <option value="" data-i18n="ctxDefault">default (shared)</option>
+            <option value="fork" data-i18n="ctxFork">fork (isolated)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="fieldInvocable">user-invocable</label>
+          <select id="meta-invocable">
+            <option value="true" selected data-i18n="invTrue">true</option>
+            <option value="false" data-i18n="invFalse">false (AI-only)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:24px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveSkill()" data-i18n="saveBtn">Save to Library</button>
+          <button class="btn" onclick="downloadSkill()" data-i18n="downloadBtn">Download .md</button>
+        </div>
+      </aside>
+
+      <div class="code-area">
+        <div class="code-header">
+          <span data-i18n="codeTitle">Skill Prompt (Markdown)</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-ghost" onclick="insertTemplate()" data-i18n="templateBtn">Template</button>
+            <button class="btn btn-sm btn-ghost" onclick="clearEditor()" data-i18n="clearBtn">Clear</button>
+          </div>
+        </div>
+        <textarea class="code-editor" id="skill-body" data-i18n-placeholder="phEditor" placeholder="Write your skill prompt here in Markdown...
+
+Example:
+You are a PDF processing expert. Your capabilities include:
+- Extracting text and tables from PDF files
+- Converting PDFs to other formats
+- Merging and splitting PDF documents
+
+## Workflow
+1. Analyze the user's request
+2. Choose the appropriate processing method
+3. Execute and verify the result"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PREVIEW ====== -->
+  <div class="panel" id="panel-preview">
+    <div style="display:flex;gap:10px;margin-bottom:20px">
+      <button class="btn btn-sm active" id="btn-preview-rich" onclick="togglePreviewMode('rich')" data-i18n="richPreview">Rich Preview</button>
+      <button class="btn btn-sm btn-ghost" id="btn-preview-raw" onclick="togglePreviewMode('raw')" data-i18n="rawSource">Raw Source</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm" onclick="copyRaw()" data-i18n="copyBtn">Copy to Clipboard</button>
+    </div>
+    <div id="preview-rich">
+      <div class="preview-card">
+        <div class="preview-header">
+          <div class="preview-icon" id="preview-icon">?</div>
+          <div class="preview-meta">
+            <h2 id="preview-name" data-i18n-default="untitledSkill">Untitled Skill</h2>
+            <p id="preview-desc" data-i18n-default="noDesc">No description</p>
+          </div>
+        </div>
+        <div class="preview-badges" id="preview-badges"></div>
+        <div class="preview-body" id="preview-body">
+          <p style="color:var(--fg3)" data-i18n="previewHint">Start writing in the Editor tab to see a preview here.</p>
+        </div>
+      </div>
+    </div>
+    <div id="preview-raw" style="display:none">
+      <pre class="preview-raw" id="preview-raw-content"></pre>
+    </div>
+  </div>
+
+  <!-- ====== LIBRARY ====== -->
+  <div class="panel" id="panel-library">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <input type="text" id="lib-search" data-i18n-placeholder="phSearch" placeholder="Search skills..." style="
+          padding:8px 14px;background:var(--bg2);border:1px solid var(--border);
+          border-radius:var(--radius-sm);color:var(--fg);font-size:.875rem;width:260px;
+          font-family:var(--font-body);
+        ">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="exportAll()" data-i18n="exportAllBtn">Export All (.json)</button>
+        <button class="btn btn-sm btn-danger" onclick="clearLibrary()" data-i18n="clearAllBtn">Clear All</button>
+      </div>
+    </div>
+    <div class="library-grid" id="library-grid"></div>
+  </div>
+
+  <footer>
+    <span data-i18n="footerBuilt">Built for</span> <a href="https://www.codebuddy.cn" target="_blank">CodeBuddy</a> / WorkBuddy Skills ecosystem.
+    <span data-i18n="footerDeploy">Deploy on</span> <a href="https://pages.github.com" target="_blank">GitHub Pages</a>.
+  </footer>
+</div>
+
+<!-- Import Modal -->
+<div class="overlay" id="import-modal">
+  <div class="modal">
+    <h3 data-i18n="importTitle">Import Skill</h3>
+    <p data-i18n="importDesc">Drag & drop a SKILL.md file, paste raw content, or import a JSON backup.</p>
+    <div class="dropzone" id="dropzone">
+      <div class="drop-icon">&#8593;</div>
+      <p data-i18n="dropHint">Drop .md or .json file here, or click to browse</p>
+      <input type="file" id="file-input" accept=".md,.json" style="display:none">
+    </div>
+    <div class="field" style="margin-top:16px">
+      <label data-i18n="pasteLabel">Or paste SKILL.md content:</label>
+      <textarea id="import-paste" rows="6" placeholder="---\nname: my-skill\ndescription: ...\n---\n\nPrompt content here..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeImportModal()" data-i18n="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" onclick="doImport()" data-i18n="importActionBtn">Import</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ============================================================
+// I18N — 中文 / English
+// ============================================================
+const I18N = {
+  en: {
+    // Header
+    importBtn: 'Import SKILL.md',
+    // Tabs
+    tabEditor: 'Editor', tabPreview: 'Preview', tabLibrary: 'Library',
+    // Editor meta
+    metaTitle: 'Skill Metadata',
+    fieldName: 'name', fieldDesc: 'description', fieldTrigger: 'trigger type',
+    fieldTools: 'allowed-tools', fieldContext: 'context', fieldInvocable: 'user-invocable',
+    phName: 'e.g. pdf-processor', phDesc: 'Skill description...',
+    triggerAlways: 'always (auto-trigger)', triggerManual: 'manual (slash command)', triggerRequested: 'requested (AI decides)',
+    addBtn: 'Add', phTool: 'e.g. Bash',
+    toolHelp: 'Common: Read, Write, Bash, WebFetch, Grep, Glob',
+    ctxDefault: 'default (shared)', ctxFork: 'fork (isolated)',
+    invTrue: 'true', invFalse: 'false (AI-only)',
+    saveBtn: 'Save to Library', downloadBtn: 'Download .md',
+    // Code area
+    codeTitle: 'Skill Prompt (Markdown)', templateBtn: 'Template', clearBtn: 'Clear',
+    phEditor: 'Write your skill prompt here in Markdown...\n\nExample:\nYou are a PDF processing expert. Your capabilities include:\n- Extracting text and tables from PDF files\n- Converting PDFs to other formats\n- Merging and splitting PDF documents\n\n## Workflow\n1. Analyze the user\'s request\n2. Choose the appropriate processing method\n3. Execute and verify the result',
+    // Preview
+    richPreview: 'Rich Preview', rawSource: 'Raw Source', copyBtn: 'Copy to Clipboard',
+    untitledSkill: 'Untitled Skill', noDesc: 'No description',
+    previewHint: 'Start writing in the Editor tab to see a preview here.',
+    // Library
+    phSearch: 'Search skills...', exportAllBtn: 'Export All (.json)', clearAllBtn: 'Clear All',
+    emptyNoMatch: 'No skills match your search.',
+    emptyLib: 'Your skill library is empty. Create or import a skill to get started.',
+    createSkillBtn: 'Create Skill',
+    noDescCard: '(no description)',
+    // Import modal
+    importTitle: 'Import Skill',
+    importDesc: 'Drag & drop a SKILL.md file, paste raw content, or import a JSON backup.',
+    dropHint: 'Drop .md or .json file here, or click to browse',
+    pasteLabel: 'Or paste SKILL.md content:',
+    cancelBtn: 'Cancel', importActionBtn: 'Import',
+    // Footer
+    footerBuilt: 'Built for', footerDeploy: 'Deploy on',
+    // Toast messages
+    toastNameRequired: 'Please enter a skill name',
+    toastUpdated: name => `Updated "${name}"`,
+    toastSaved: name => `Saved "${name}" to library`,
+    toastDownloaded: name => `Downloaded ${name}.md`,
+    toastCopied: 'Copied to clipboard',
+    toastEmptyLib: 'Library is empty',
+    toastExported: n => `Exported ${n} skills`,
+    toastNoContent: 'No content to import',
+    toastImported: 'Imported into editor',
+    toastImportedN: n => `Imported ${n} skills`,
+    toastInvalidJson: 'Invalid JSON format',
+    toastJsonFail: 'Failed to parse JSON',
+    toastDeleted: 'Deleted',
+    toastCleared: 'Library cleared',
+    toastLoaded: name => `Loaded "${name}" into editor`,
+    // Confirms
+    confirmReplace: 'Replace current content with template?',
+    confirmClear: 'Clear all editor content?',
+    confirmDelete: name => `Delete "${name}"?`,
+    confirmClearAll: 'Delete ALL skills from local library?',
+    // Template
+    tplBody: `You are a specialized assistant for [DOMAIN].
+
+## Capabilities
+- Capability 1
+- Capability 2
+- Capability 3
+
+## Workflow
+1. Analyze the user's request
+2. Plan the approach
+3. Execute step by step
+4. Verify the result
+
+## Guidelines
+- Always explain your reasoning
+- Handle errors gracefully
+- Ask for clarification when the request is ambiguous
+
+## Examples
+
+**User**: [example request]
+**Assistant**: [example response]`,
+    tplName: 'my-skill',
+    tplDesc: 'A specialized skill for...',
+    // Preview no content
+    previewEmpty: '<p style="color:var(--fg3)">No content yet.</p>',
+  },
+  zh: {
+    importBtn: '导入 SKILL.md',
+    tabEditor: '编辑器', tabPreview: '预览', tabLibrary: '技能库',
+    metaTitle: '技能元数据',
+    fieldName: '名称', fieldDesc: '描述', fieldTrigger: '触发方式',
+    fieldTools: '允许工具', fieldContext: '上下文', fieldInvocable: '用户可调用',
+    phName: '例如 pdf-processor', phDesc: '技能描述...',
+    triggerAlways: 'always（自动触发）', triggerManual: 'manual（斜杠命令）', triggerRequested: 'requested（AI 决定）',
+    addBtn: '添加', phTool: '例如 Bash',
+    toolHelp: '常用：Read, Write, Bash, WebFetch, Grep, Glob',
+    ctxDefault: 'default（共享）', ctxFork: 'fork（隔离）',
+    invTrue: 'true', invFalse: 'false（仅AI）',
+    saveBtn: '保存到技能库', downloadBtn: '下载 .md',
+    codeTitle: '技能 Prompt（Markdown）', templateBtn: '模板', clearBtn: '清空',
+    phEditor: '在此用 Markdown 编写技能 Prompt...\n\n示例：\n你是一个 PDF 处理专家，你的能力包括：\n- 从 PDF 文件中提取文本和表格\n- 将 PDF 转换为其他格式\n- 合并和拆分 PDF 文档\n\n## 工作流程\n1. 分析用户请求\n2. 选择合适的处理方法\n3. 执行并验证结果',
+    richPreview: '富文本预览', rawSource: '原始源码', copyBtn: '复制到剪贴板',
+    untitledSkill: '未命名技能', noDesc: '暂无描述',
+    previewHint: '在编辑器中开始编写，即可在此处看到预览。',
+    phSearch: '搜索技能...', exportAllBtn: '全部导出 (.json)', clearAllBtn: '清空全部',
+    emptyNoMatch: '没有匹配的技能。',
+    emptyLib: '技能库为空，创建或导入一个技能开始吧。',
+    createSkillBtn: '创建技能',
+    noDescCard: '（暂无描述）',
+    importTitle: '导入技能',
+    importDesc: '拖放 SKILL.md 文件、粘贴原始内容或导入 JSON 备份。',
+    dropHint: '将 .md 或 .json 文件拖到此处，或点击浏览',
+    pasteLabel: '或粘贴 SKILL.md 内容：',
+    cancelBtn: '取消', importActionBtn: '导入',
+    footerBuilt: '为', footerDeploy: '而构建。部署在',
+    toastNameRequired: '请输入技能名称',
+    toastUpdated: name => `已更新 "${name}"`,
+    toastSaved: name => `已保存 "${name}" 到技能库`,
+    toastDownloaded: name => `已下载 ${name}.md`,
+    toastCopied: '已复制到剪贴板',
+    toastEmptyLib: '技能库为空',
+    toastExported: n => `已导出 ${n} 个技能`,
+    toastNoContent: '没有可导入的内容',
+    toastImported: '已导入到编辑器',
+    toastImportedN: n => `已导入 ${n} 个技能`,
+    toastInvalidJson: 'JSON 格式无效',
+    toastJsonFail: '解析 JSON 失败',
+    toastDeleted: '已删除',
+    toastCleared: '技能库已清空',
+    toastLoaded: name => `已加载 "${name}" 到编辑器`,
+    confirmReplace: '用模板替换当前内容？',
+    confirmClear: '清空所有编辑器内容？',
+    confirmDelete: name => `删除 "${name}"？`,
+    confirmClearAll: '确定要删除本地技能库中的所有技能吗？',
+    tplBody: `你是 [领域] 的专业助手。
+
+## 能力
+- 能力 1
+- 能力 2
+- 能力 3
+
+## 工作流程
+1. 分析用户的请求
+2. 规划方案
+3. 逐步执行
+4. 验证结果
+
+## 准则
+- 始终解释你的推理过程
+- 优雅地处理错误
+- 当请求不明确时，主动要求澄清
+
+## 示例
+
+**用户**：[示例请求]
+**助手**：[示例回复]`,
+    tplName: 'my-skill',
+    tplDesc: '一个专门用于...',
+    previewEmpty: '<p style="color:var(--fg3)">暂无内容。</p>',
+  }
+};
+
+const LANG_KEY = 'ai-skill-forge-lang';
+let currentLang = localStorage.getItem(LANG_KEY) || 'en';
+
+function t(key, ...args) {
+  const val = I18N[currentLang][key] || I18N.en[key] || key;
+  return typeof val === 'function' ? val(...args) : val;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  // Update switch buttons
+  document.querySelectorAll('#lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  applyI18n();
+  renderLibrary(); // re-render dynamic content
+}
+
+function applyI18n() {
+  // Text content
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (I18N[currentLang][key] !== undefined) {
+      const val = I18N[currentLang][key];
+      if (typeof val === 'string') el.textContent = val;
+    }
+  });
+  // Placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[currentLang][key] !== undefined) {
+      el.placeholder = I18N[currentLang][key];
+    }
+  });
+  // Default values for preview (only if content is default)
+  document.querySelectorAll('[data-i18n-default]').forEach(el => {
+    const key = el.dataset.i18nDefault;
+    const enVal = I18N.en[key];
+    const zhVal = I18N.zh[key];
+    if (el.textContent === enVal || el.textContent === zhVal) {
+      el.textContent = I18N[currentLang][key];
+    }
+  });
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'ai-skill-forge-library';
+let tools = [];
+let library = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+// ============================================================
+// TABS
+// ============================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'preview') refreshPreview();
+    if (tab.dataset.tab === 'library') renderLibrary();
+  });
+});
+
+// ============================================================
+// TOOLS CHIPS
+// ============================================================
+function addTool() {
+  const inp = document.getElementById('tool-input');
+  const val = inp.value.trim();
+  if (val && !tools.includes(val)) {
+    tools.push(val);
+    renderToolChips();
+  }
+  inp.value = '';
+  inp.focus();
+}
+document.getElementById('tool-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addTool(); }
+});
+function removeTool(t) { tools = tools.filter(x => x !== t); renderToolChips(); }
+function renderToolChips() {
+  document.getElementById('tool-chips').innerHTML = tools.map(t =>
+    `<span class="chip">${esc(t)}<span class="remove" onclick="removeTool('${esc(t)}')">&times;</span></span>`
+  ).join('');
+}
+
+// ============================================================
+// BUILD SKILL.md
+// ============================================================
+function buildSkillMd() {
+  const name = document.getElementById('meta-name').value.trim();
+  const desc = document.getElementById('meta-desc').value.trim();
+  const trigger = document.getElementById('meta-trigger').value;
+  const ctx = document.getElementById('meta-context').value;
+  const invocable = document.getElementById('meta-invocable').value;
+  const body = document.getElementById('skill-body').value;
+
+  let front = [];
+  if (name) front.push(`name: ${name}`);
+  if (desc) front.push(`description: ${desc}`);
+  if (tools.length) front.push(`allowed-tools: ${tools.join(', ')}`);
+  if (trigger && trigger !== 'requested') front.push(`trigger: ${trigger}`);
+  if (ctx) front.push(`context: ${ctx}`);
+  if (invocable === 'false') front.push(`user-invocable: false`);
+
+  let md = '';
+  if (front.length) {
+    md = '---\n' + front.join('\n') + '\n---\n\n';
+  }
+  md += body;
+  return md;
+}
+
+// ============================================================
+// PARSE SKILL.md
+// ============================================================
+function parseSkillMd(text) {
+  text = text.trim();
+  let meta = {}, body = text;
+  const fmMatch = text.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
+  if (fmMatch) {
+    body = fmMatch[2];
+    fmMatch[1].split('\n').forEach(line => {
+      const idx = line.indexOf(':');
+      if (idx > 0) {
+        const key = line.slice(0, idx).trim();
+        const val = line.slice(idx + 1).trim();
+        meta[key] = val;
+      }
+    });
+  }
+  return { meta, body };
+}
+
+// ============================================================
+// LOAD SKILL INTO EDITOR
+// ============================================================
+function loadIntoEditor(md) {
+  const { meta, body } = parseSkillMd(md);
+  document.getElementById('meta-name').value = meta.name || '';
+  document.getElementById('meta-desc').value = meta.description || '';
+  document.getElementById('meta-trigger').value = meta.trigger || 'requested';
+  document.getElementById('meta-context').value = meta.context || '';
+  document.getElementById('meta-invocable').value = meta['user-invocable'] === 'false' ? 'false' : 'true';
+  tools = meta['allowed-tools'] ? meta['allowed-tools'].split(',').map(s => s.trim()).filter(Boolean) : [];
+  renderToolChips();
+  document.getElementById('skill-body').value = body;
+}
+
+// ============================================================
+// PREVIEW
+// ============================================================
+function refreshPreview() {
+  const name = document.getElementById('meta-name').value.trim() || t('untitledSkill');
+  const desc = document.getElementById('meta-desc').value.trim() || t('noDesc');
+  const body = document.getElementById('skill-body').value;
+
+  document.getElementById('preview-name').textContent = name;
+  document.getElementById('preview-desc').textContent = desc;
+  document.getElementById('preview-icon').textContent = name.charAt(0).toUpperCase();
+
+  // Badges
+  const badges = [];
+  const trigger = document.getElementById('meta-trigger').value;
+  badges.push(`<span class="badge badge-cyan">${trigger}</span>`);
+  if (tools.length) tools.forEach(t => badges.push(`<span class="badge badge-green">${esc(t)}</span>`));
+  const ctx = document.getElementById('meta-context').value;
+  if (ctx) badges.push(`<span class="badge badge-purple">context: ${ctx}</span>`);
+  if (document.getElementById('meta-invocable').value === 'false')
+    badges.push(`<span class="badge badge-amber">AI-only</span>`);
+  document.getElementById('preview-badges').innerHTML = badges.join('');
+
+  // Body — simple markdown rendering
+  document.getElementById('preview-body').innerHTML = renderMarkdown(body);
+  document.getElementById('preview-raw-content').textContent = buildSkillMd();
+}
+
+function togglePreviewMode(mode) {
+  const rich = document.getElementById('preview-rich');
+  const raw = document.getElementById('preview-raw');
+  const btnRich = document.getElementById('btn-preview-rich');
+  const btnRaw = document.getElementById('btn-preview-raw');
+  if (mode === 'raw') {
+    rich.style.display = 'none'; raw.style.display = 'block';
+    btnRaw.classList.remove('btn-ghost'); btnRaw.classList.add('active');
+    btnRich.classList.add('btn-ghost'); btnRich.classList.remove('active');
+  } else {
+    rich.style.display = 'block'; raw.style.display = 'none';
+    btnRich.classList.remove('btn-ghost'); btnRich.classList.add('active');
+    btnRaw.classList.add('btn-ghost'); btnRaw.classList.remove('active');
+  }
+}
+
+// Simple markdown to HTML
+function renderMarkdown(md) {
+  if (!md.trim()) return t('previewEmpty');
+  let html = esc(md);
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/\n{2,}/g, '</p><p>');
+  html = '<p>' + html + '</p>';
+  html = html.replace(/<p>\s*<(h[123]|ul|ol|pre|blockquote)/g, '<$1');
+  html = html.replace(/<\/(h[123]|ul|ol|pre|blockquote)>\s*<\/p>/g, '</$1>');
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  return html;
+}
+
+// ============================================================
+// SAVE / DOWNLOAD
+// ============================================================
+function saveSkill() {
+  const name = document.getElementById('meta-name').value.trim();
+  if (!name) { toast(t('toastNameRequired'), 'error'); return; }
+  const md = buildSkillMd();
+  const existing = library.findIndex(s => s.name === name);
+  const entry = { name, md, savedAt: new Date().toISOString() };
+  if (existing >= 0) {
+    library[existing] = entry;
+    toast(t('toastUpdated', name), 'success');
+  } else {
+    library.push(entry);
+    toast(t('toastSaved', name), 'success');
+  }
+  persist();
+  updateLibCount();
+}
+
+function downloadSkill() {
+  const name = document.getElementById('meta-name').value.trim() || 'SKILL';
+  const md = buildSkillMd();
+  download(name + '.md', md, 'text/markdown');
+  toast(t('toastDownloaded', name), 'success');
+}
+
+function copyRaw() {
+  const md = buildSkillMd();
+  navigator.clipboard.writeText(md).then(() => toast(t('toastCopied'), 'success'));
+}
+
+// ============================================================
+// LIBRARY
+// ============================================================
+function renderLibrary() {
+  const grid = document.getElementById('library-grid');
+  const q = document.getElementById('lib-search').value.toLowerCase();
+  const filtered = library.filter(s =>
+    s.name.toLowerCase().includes(q) || (s.md && s.md.toLowerCase().includes(q))
+  );
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">&#9881;</div>
+      <p>${library.length ? t('emptyNoMatch') : t('emptyLib')}</p>
+      ${!library.length ? `<button class="btn btn-primary" onclick="switchTab('editor')">${t('createSkillBtn')}</button>` : ''}
+    </div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map((s, i) => {
+    const { meta } = parseSkillMd(s.md);
+    const desc = meta.description || t('noDescCard');
+    const trigger = meta.trigger || 'requested';
+    const date = s.savedAt ? new Date(s.savedAt).toLocaleDateString() : '';
+    return `<div class="skill-card" onclick="editSkill(${library.indexOf(s)})">
+      <h4>${esc(s.name)}</h4>
+      <p>${esc(desc)}</p>
+      <div class="card-foot">
+        <span class="card-type">${trigger} &middot; ${date}</span>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();downloadLib(${library.indexOf(s)})">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12zM3 14h10v-1H3v1z" fill="currentColor"/></svg>
+          </button>
+          <button class="btn btn-sm btn-ghost btn-danger" onclick="event.stopPropagation();deleteSkill(${library.indexOf(s)})">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" fill="currentColor"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateLibCount();
+}
+document.getElementById('lib-search').addEventListener('input', renderLibrary);
+
+function editSkill(idx) {
+  loadIntoEditor(library[idx].md);
+  switchTab('editor');
+  toast(t('toastLoaded', library[idx].name), 'success');
+}
+
+function downloadLib(idx) {
+  const s = library[idx];
+  download(s.name + '.md', s.md, 'text/markdown');
+}
+
+function deleteSkill(idx) {
+  if (!confirm(t('confirmDelete', library[idx].name))) return;
+  library.splice(idx, 1);
+  persist();
+  renderLibrary();
+  toast(t('toastDeleted'), 'success');
+}
+
+function clearLibrary() {
+  if (!confirm(t('confirmClearAll'))) return;
+  library = [];
+  persist();
+  renderLibrary();
+  toast(t('toastCleared'), 'success');
+}
+
+function exportAll() {
+  if (!library.length) { toast(t('toastEmptyLib'), 'error'); return; }
+  download('skills-backup.json', JSON.stringify(library, null, 2), 'application/json');
+  toast(t('toastExported', library.length), 'success');
+}
+
+// ============================================================
+// IMPORT MODAL
+// ============================================================
+function showImportModal() { document.getElementById('import-modal').classList.add('show'); }
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('show');
+  document.getElementById('import-paste').value = '';
+}
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (file.name.endsWith('.json')) {
+      try {
+        const data = JSON.parse(reader.result);
+        if (Array.isArray(data)) {
+          data.forEach(s => {
+            if (s.name && s.md) {
+              const existing = library.findIndex(x => x.name === s.name);
+              if (existing >= 0) library[existing] = s;
+              else library.push(s);
+            }
+          });
+          persist();
+          renderLibrary();
+          closeImportModal();
+          toast(t('toastImportedN', data.length), 'success');
+        } else {
+          toast(t('toastInvalidJson'), 'error');
+        }
+      } catch { toast(t('toastJsonFail'), 'error'); }
+    } else {
+      document.getElementById('import-paste').value = reader.result;
+    }
+  };
+  reader.readAsText(file);
+}
+
+function doImport() {
+  const text = document.getElementById('import-paste').value.trim();
+  if (!text) { toast(t('toastNoContent'), 'error'); return; }
+  loadIntoEditor(text);
+  closeImportModal();
+  switchTab('editor');
+  toast(t('toastImported'), 'success');
+}
+
+// ============================================================
+// TEMPLATE
+// ============================================================
+function insertTemplate() {
+  if (document.getElementById('skill-body').value.trim() &&
+      !confirm(t('confirmReplace'))) return;
+  document.getElementById('skill-body').value = t('tplBody');
+  if (!document.getElementById('meta-name').value) {
+    document.getElementById('meta-name').value = t('tplName');
+    document.getElementById('meta-desc').value = t('tplDesc');
+  }
+}
+
+function clearEditor() {
+  if (!confirm(t('confirmClear'))) return;
+  document.getElementById('meta-name').value = '';
+  document.getElementById('meta-desc').value = '';
+  document.getElementById('meta-trigger').value = 'requested';
+  document.getElementById('meta-context').value = '';
+  document.getElementById('meta-invocable').value = 'true';
+  document.getElementById('skill-body').value = '';
+  tools = [];
+  renderToolChips();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function download(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+  updateLibCount();
+}
+
+function updateLibCount() {
+  const el = document.getElementById('lib-count');
+  el.textContent = library.length ? `(${library.length})` : '';
+}
+
+function switchTab(name) {
+  document.querySelector(`.tab[data-tab="${name}"]`).click();
+}
+
+function toast(msg, type = '') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2800);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+// Apply saved language
+(function initLang() {
+  const saved = localStorage.getItem(LANG_KEY);
+  if (saved) currentLang = saved;
+  document.querySelectorAll('#lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === currentLang);
+  });
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+  applyI18n();
+})();
+
+updateLibCount();
+renderLibrary();
+</script>
+</body>
+</html>
