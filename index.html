@@ -311,6 +311,23 @@ header{
 
 /* ---- TOAST ---- */
 .toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+
+/* ---- ZIP FILE LIST ---- */
+.zip-files{
+  margin-top:8px;padding:8px 10px;background:var(--bg);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-family:var(--font-mono);font-size:.7rem;color:var(--fg3);
+  max-height:100px;overflow-y:auto;line-height:1.6;
+}
+.zip-files .file-item{display:flex;justify-content:space-between;gap:8px}
+.zip-files .file-size{color:var(--fg3);opacity:.6;white-space:nowrap}
+.zip-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:10px;font-size:.65rem;
+  font-family:var(--font-mono);font-weight:600;
+  background:var(--purple-dim);color:var(--purple);
+  margin-left:8px;vertical-align:middle;
+}
 .toast{
   padding:12px 20px;border-radius:var(--radius-sm);
   font-size:.85rem;font-weight:500;
@@ -495,11 +512,11 @@ You are a PDF processing expert. Your capabilities include:
 <div class="overlay" id="import-modal">
   <div class="modal">
     <h3 data-i18n="importTitle">Import Skill</h3>
-    <p data-i18n="importDesc">Drag & drop a SKILL.md file, paste raw content, or import a JSON backup.</p>
+    <p data-i18n="importDesc">Drag & drop a SKILL.md file, skill .zip package, paste raw content, or import a JSON backup.</p>
     <div class="dropzone" id="dropzone">
       <div class="drop-icon">&#8593;</div>
-      <p data-i18n="dropHint">Drop .md or .json file here, or click to browse</p>
-      <input type="file" id="file-input" accept=".md,.json" style="display:none">
+      <p data-i18n="dropHint">Drop .md, .json or .zip file here, or click to browse</p>
+      <input type="file" id="file-input" accept=".md,.json,.zip" style="display:none">
     </div>
     <div class="field" style="margin-top:16px">
       <label data-i18n="pasteLabel">Or paste SKILL.md content:</label>
@@ -514,6 +531,7 @@ You are a PDF processing expert. Your capabilities include:
 
 <div class="toast-container" id="toasts"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 // ============================================================
 // I18N — 中文 / English
@@ -550,8 +568,8 @@ const I18N = {
     noDescCard: '(no description)',
     // Import modal
     importTitle: 'Import Skill',
-    importDesc: 'Drag & drop a SKILL.md file, paste raw content, or import a JSON backup.',
-    dropHint: 'Drop .md or .json file here, or click to browse',
+    importDesc: 'Drag & drop a SKILL.md file, skill .zip package, paste raw content, or import a JSON backup.',
+    dropHint: 'Drop .md, .json or .zip file here, or click to browse',
     pasteLabel: 'Or paste SKILL.md content:',
     cancelBtn: 'Cancel', importActionBtn: 'Import',
     // Footer
@@ -569,6 +587,9 @@ const I18N = {
     toastImportedN: n => `Imported ${n} skills`,
     toastInvalidJson: 'Invalid JSON format',
     toastJsonFail: 'Failed to parse JSON',
+    toastZipNoSkill: 'No SKILL.md found in zip package',
+    toastZipImported: name => `Imported skill package "${name}"`,
+    toastZipFail: 'Failed to parse zip file',
     toastDeleted: 'Deleted',
     toastCleared: 'Library cleared',
     toastLoaded: name => `Loaded "${name}" into editor`,
@@ -604,6 +625,9 @@ const I18N = {
     tplDesc: 'A specialized skill for...',
     // Preview no content
     previewEmpty: '<p style="color:var(--fg3)">No content yet.</p>',
+    // Zip
+    zipFiles: n => `${n} file${n>1?'s':''}`,
+    zipPackage: 'ZIP package',
   },
   zh: {
     importBtn: '导入 SKILL.md',
@@ -629,8 +653,8 @@ const I18N = {
     createSkillBtn: '创建技能',
     noDescCard: '（暂无描述）',
     importTitle: '导入技能',
-    importDesc: '拖放 SKILL.md 文件、粘贴原始内容或导入 JSON 备份。',
-    dropHint: '将 .md 或 .json 文件拖到此处，或点击浏览',
+    importDesc: '拖放 SKILL.md 文件、技能 .zip 压缩包、粘贴原始内容或导入 JSON 备份。',
+    dropHint: '将 .md、.json 或 .zip 文件拖到此处，或点击浏览',
     pasteLabel: '或粘贴 SKILL.md 内容：',
     cancelBtn: '取消', importActionBtn: '导入',
     footerBuilt: '为', footerDeploy: '而构建。部署在',
@@ -646,6 +670,9 @@ const I18N = {
     toastImportedN: n => `已导入 ${n} 个技能`,
     toastInvalidJson: 'JSON 格式无效',
     toastJsonFail: '解析 JSON 失败',
+    toastZipNoSkill: '压缩包中未找到 SKILL.md',
+    toastZipImported: name => `已导入技能包 "${name}"`,
+    toastZipFail: '解析压缩包失败',
     toastDeleted: '已删除',
     toastCleared: '技能库已清空',
     toastLoaded: name => `已加载 "${name}" 到编辑器`,
@@ -678,6 +705,8 @@ const I18N = {
     tplName: 'my-skill',
     tplDesc: '一个专门用于...',
     previewEmpty: '<p style="color:var(--fg3)">暂无内容。</p>',
+    zipFiles: n => `${n} 个文件`,
+    zipPackage: 'ZIP 压缩包',
   }
 };
 
@@ -911,6 +940,13 @@ function saveSkill() {
   const md = buildSkillMd();
   const existing = library.findIndex(s => s.name === name);
   const entry = { name, md, savedAt: new Date().toISOString() };
+  // Preserve zip data if updating an entry that came from a zip
+  if (existing >= 0 && library[existing].zipData) {
+    entry.zipData = library[existing].zipData;
+    entry.zipFiles = library[existing].zipFiles;
+    entry.zipName = library[existing].zipName;
+    entry.metadata = library[existing].metadata;
+  }
   if (existing >= 0) {
     library[existing] = entry;
     toast(t('toastUpdated', name), 'success');
@@ -956,16 +992,26 @@ function renderLibrary() {
     const desc = meta.description || t('noDescCard');
     const trigger = meta.trigger || 'requested';
     const date = s.savedAt ? new Date(s.savedAt).toLocaleDateString() : '';
-    return `<div class="skill-card" onclick="editSkill(${library.indexOf(s)})">
-      <h4>${esc(s.name)}</h4>
+    const isZip = !!(s.zipData && s.zipFiles);
+    const zipBadge = isZip ? `<span class="zip-badge">${t('zipPackage')} &middot; ${t('zipFiles', s.zipFiles.length)}</span>` : '';
+    const zipFileList = isZip ? `<div class="zip-files">${s.zipFiles.map(f =>
+      `<div class="file-item"><span>${esc(f.path)}</span><span class="file-size">${formatSize(f.size)}</span></div>`
+    ).join('')}</div>` : '';
+    const realIdx = library.indexOf(s);
+    return `<div class="skill-card" onclick="editSkill(${realIdx})">
+      <h4>${esc(s.name)}${zipBadge}</h4>
       <p>${esc(desc)}</p>
+      ${zipFileList}
       <div class="card-foot">
         <span class="card-type">${trigger} &middot; ${date}</span>
         <div class="card-actions">
-          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();downloadLib(${library.indexOf(s)})">
+          ${isZip ? `<button class="btn btn-sm btn-ghost" title="Download .zip" onclick="event.stopPropagation();downloadZip(${realIdx})">
+            <svg viewBox="0 0 16 16" width="14" height="14"><path d="M4.5 1A1.5 1.5 0 003 2.5v11A1.5 1.5 0 004.5 15h7a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0011.5 1h-7zM7 4h2v2H7V4zm0 3h2v2H7V7zm-1 4h4l-2 2.5L6 11z" fill="currentColor"/></svg>
+          </button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();downloadLib(${realIdx})">
             <svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12zM3 14h10v-1H3v1z" fill="currentColor"/></svg>
           </button>
-          <button class="btn btn-sm btn-ghost btn-danger" onclick="event.stopPropagation();deleteSkill(${library.indexOf(s)})">
+          <button class="btn btn-sm btn-ghost btn-danger" onclick="event.stopPropagation();deleteSkill(${realIdx})">
             <svg viewBox="0 0 16 16" width="14" height="14"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" fill="currentColor"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" fill="currentColor"/></svg>
           </button>
         </div>
@@ -985,6 +1031,26 @@ function editSkill(idx) {
 function downloadLib(idx) {
   const s = library[idx];
   download(s.name + '.md', s.md, 'text/markdown');
+}
+
+function downloadZip(idx) {
+  const s = library[idx];
+  if (!s.zipData) return;
+  const binary = atob(s.zipData);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: 'application/zip' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = s.zipName || (s.name + '.zip'); a.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatSize(bytes) {
+  if (!bytes || bytes === 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 function deleteSkill(idx) {
@@ -1031,6 +1097,10 @@ dropzone.addEventListener('drop', e => {
 fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
 
 function handleFile(file) {
+  if (file.name.endsWith('.zip')) {
+    handleZipFile(file);
+    return;
+  }
   const reader = new FileReader();
   reader.onload = () => {
     if (file.name.endsWith('.json')) {
@@ -1057,6 +1127,91 @@ function handleFile(file) {
     }
   };
   reader.readAsText(file);
+}
+
+// ============================================================
+// ZIP IMPORT
+// ============================================================
+async function handleZipFile(file) {
+  try {
+    const zip = await JSZip.loadAsync(file);
+    // Find SKILL.md — could be at root or inside a subdirectory
+    let skillMdPath = null;
+    let metadataPath = null;
+    const allFiles = [];
+    zip.forEach((relativePath, entry) => {
+      if (entry.dir) return;
+      // Skip macOS resource fork files
+      if (relativePath.startsWith('__MACOSX/') || relativePath.includes('/.')) return;
+      allFiles.push({ path: relativePath, size: entry._data ? entry._data.uncompressedSize : 0 });
+      const name = relativePath.split('/').pop().toUpperCase();
+      if (name === 'SKILL.MD' && !skillMdPath) skillMdPath = relativePath;
+      if (name === 'METADATA.JSON' && !metadataPath) metadataPath = relativePath;
+    });
+
+    if (!skillMdPath) {
+      toast(t('toastZipNoSkill'), 'error');
+      return;
+    }
+
+    // Read SKILL.md content
+    const skillMdContent = await zip.file(skillMdPath).async('string');
+
+    // Try reading metadata.json for extra info
+    let metadata = null;
+    if (metadataPath) {
+      try {
+        metadata = JSON.parse(await zip.file(metadataPath).async('string'));
+      } catch { /* ignore parse errors */ }
+    }
+
+    // Parse SKILL.md to get name/description
+    const parsed = parseSkillMd(skillMdContent);
+    const skillName = (metadata && metadata.name) || parsed.meta.name || file.name.replace(/\.zip$/i, '');
+    const desc = (metadata && metadata.description) || parsed.meta.description || '';
+
+    // Build file manifest for storage
+    const fileManifest = allFiles.map(f => ({
+      path: f.path,
+      size: f.size,
+    }));
+
+    // Store the raw zip as base64 for re-download
+    const zipBase64 = await file.arrayBuffer().then(buf =>
+      btoa(new Uint8Array(buf).reduce((s, b) => s + String.fromCharCode(b), ''))
+    );
+
+    // Load into editor
+    loadIntoEditor(skillMdContent);
+    if (metadata) {
+      // Override with metadata info if available
+      if (metadata.name) document.getElementById('meta-name').value = metadata.name;
+      if (metadata.description) document.getElementById('meta-desc').value = metadata.description;
+    }
+
+    // Also save to library with zip data
+    const entry = {
+      name: skillName,
+      md: skillMdContent,
+      savedAt: new Date().toISOString(),
+      zipData: zipBase64,
+      zipFiles: fileManifest,
+      zipName: file.name,
+      metadata: metadata,
+    };
+    const existing = library.findIndex(x => x.name === skillName);
+    if (existing >= 0) library[existing] = entry;
+    else library.push(entry);
+    persist();
+    updateLibCount();
+
+    closeImportModal();
+    switchTab('editor');
+    toast(t('toastZipImported', skillName), 'success');
+  } catch (e) {
+    console.error('Zip parse error:', e);
+    toast(t('toastZipFail'), 'error');
+  }
 }
 
 function doImport() {
